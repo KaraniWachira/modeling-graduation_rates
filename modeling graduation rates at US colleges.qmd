@@ -5,6 +5,8 @@ format: html
 editor: visual
 ---
 
+![](images/graduation_rates.jpeg){fig-align="center" width="300"}
+
 ## Guiding questions
 
 1.  Do colleges with large full-time enrollments have lower graduation rates?
@@ -158,6 +160,9 @@ summary(model_private_int)
 # Compute analysis of variance (or deviance) tables for one or more fitted model objects.
 anova(model_private_int)
 
+
+
+
 ```
 
 ```{r}
@@ -165,6 +170,11 @@ anova(model_private_int)
 
 model_top <- lm(Grad.Rate ~ Private + log_full + Top25perc, data = college_small)
 
+
+summary(model_top)
+
+# diagnotic plot for this
+plot(model_top)
 
 
 ```

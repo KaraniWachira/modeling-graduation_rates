@@ -1,0 +1,4 @@
+- source: modeling graduation rates at US colleges.qmd
+  quarto-pub:
+    - id: 5e0d0dd8-7862-4a88-9e36-510a63d38338
+      url: 'https://karani.quarto.pub/modeling-graduation-rates-at-us-colleges-using-data-from-the-islr2-package'
