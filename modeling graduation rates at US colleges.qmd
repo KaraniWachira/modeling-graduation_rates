@@ -1,0 +1,170 @@
+---
+title: "modeling graduation rates at US colleges using data from the {ISLR2} package"
+author: "Keith Karani"
+format: html
+editor: visual
+---
+
+## Guiding questions
+
+1.  Do colleges with large full-time enrollments have lower graduation rates?
+
+2.  How do graduation rate compare between public and private colleges?
+
+3.  Is the graduation rate different for selective schools?
+
+4.  Are there any correlations between graduation rates and others variables such as students-faculty ratio, tuition or student demographics
+
+::: callout-important
+### Source
+
+This dataset was taken from the StatLib library which is maintained at Carnegie Mellon University. The dataset was used in the ASA Statistical Graphics Section's 1995 Data Analysis Exposition
+
+### References
+
+James, G., Witten, D., Hastie, T., and Tibshirani, R. (2013) *An Introduction to Statistical Learning with applications in R*, [https://www.statlearning.com](https://www.statlearning.com/), Springer-Verlag, New York
+:::
+
+```{r}
+# setup chunk
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(ISLR2)
+
+```
+
+Lets learn about the data:
+
+U.S. News and World Report's College Data: statistics for a large number of US Colleges from the year 1995 issue of US News and World Report
+
+```{r}
+
+# to learn more about the data from the its data dictionary
+?College
+
+glimpse(College)
+
+
+summary(College)
+```
+
+Lets begin with some simple exploratory visualization to view our data in graphic representation.
+
+we will begin with plotting a histogram showing the distribution of the graduation rate
+
+```{r}
+
+ggplot(College, aes(x = Grad.Rate)) +
+  geom_histogram() +
+  labs(
+    x = "Graduation Rate"
+  )
+  theme_minimal()
+
+
+#Observation: there is an outlier that is over 100%
+  
+# let's investigate the observed outlier
+  
+ gr_outlier <- filter(College, Grad.Rate >= 100 )
+ 
+ gr_outlier
+ 
+ # with the two primary variables that we will focus on lets create a scatter plot and observe
+
+ ggplot(College, aes(x = log10(F.Undergrad), y = Grad.Rate)) +
+   geom_point() +
+   labs(
+     caption = "Source: StatLib library which is maintained at Carnegie Mellon University",
+     x = "Number of fulltime undergraduates",
+     y = "Graduation Rate"
+   ) +
+   theme_classic() 
+ 
+```
+
+```{r}
+
+college_small <- College |> 
+  mutate(
+    log_full = log10(F.Undergrad)
+  ) |> 
+  select(Grad.Rate, log_full, Private, Top25perc)
+  
+View(college_small)
+
+```
+
+Lets begin some modelling
+
+```{r}
+
+ ggplot(College, aes(x = log10(F.Undergrad), y = Grad.Rate)) +
+   geom_point() +
+   labs(
+     caption = "Source: StatLib library which is maintained at Carnegie Mellon University",
+     x = "Number of fulltime undergraduates",
+     y = "Graduation Rate"
+   ) +
+   theme_classic() +
+   geom_smooth(method = "lm")
+
+ 
+# we can observe that the variable Full Time undergraduate population is not a good predictor for the Graduation Rate answering our first question
+ 
+ 
+model_undergrad <- lm(Grad.Rate ~ log_full, data = college_small) 
+
+summary(model_undergrad)
+
+#diagnotic plot
+plot(model_undergrad)
+
+
+
+
+```
+
+What about Private(A factor with levels `No` and `Yes` indicating private or public university)
+
+```{r}
+
+ ggplot(College, aes(x = log10(F.Undergrad), y = Grad.Rate, color = Private)) +
+   geom_point() +
+   labs(
+     caption = "Source: StatLib library which is maintained at Carnegie Mellon University",
+     x = "Number of fulltime undergraduates",
+     y = "Graduation Rate"
+   ) +
+   theme_classic() +
+   geom_smooth(method = "lm", se = FALSE) +
+   scale_color_brewer(palette = "Dark2")
+
+# lets model this
+ 
+ model_private <- lm(Grad.Rate ~ Private + log_full, data = college_small)
+ 
+ summary(model_private)
+ 
+ 
+# Interaction: privare and Full time undergrad
+ 
+model_private_int <- lm(Grad.Rate ~ Private * log_full, data = college_small)
+
+summary(model_private_int)
+
+# Compute analysis of variance (or deviance) tables for one or more fitted model objects.
+anova(model_private_int)
+
+```
+
+```{r}
+# what about Top 25%
+
+model_top <- lm(Grad.Rate ~ Private + log_full + Top25perc, data = college_small)
+
+
+
+```
